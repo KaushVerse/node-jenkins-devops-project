@@ -1,10 +1,6 @@
 pipeline {
 
-   agent {
-        docker {
-            image 'node:20'
-        }
-    }
+    agent any
 
     environment {
         IMAGE_NAME = "kaushverse/node-devops-app"
@@ -40,41 +36,31 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '/usr/bin/docker build -t $IMAGE_NAME:$DOCKER_TAG .'
+                sh 'docker build -t $IMAGE_NAME:$DOCKER_TAG .'
             }
         }
 
         stage('Login to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: "$DOCKER_CREDS", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                   sh '''
-                    echo $PASSWORD | /usr/bin/docker login -u $USERNAME --password-stdin
-                      '''
+                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
                 }
             }
         }
 
-      stage('Push Image') {
-          steps {
-        sh '''
-        /usr/bin/docker tag $IMAGE_NAME:$DOCKER_TAG $IMAGE_NAME:latest
-        /usr/bin/docker push $IMAGE_NAME:$DOCKER_TAG
-        /usr/bin/docker push $IMAGE_NAME:latest
-        '''
-     }
-    }
-
-        stage('Deploy Container') {
+        stage('Push Image') {
             steps {
-                sh 'docker compose down'
-                sh 'docker compose pull'
-                sh 'docker compose up -d'
+                sh '''
+                docker tag $IMAGE_NAME:$DOCKER_TAG $IMAGE_NAME:latest
+                docker push $IMAGE_NAME:$DOCKER_TAG
+                docker push $IMAGE_NAME:latest
+                '''
             }
         }
+
     }
 
     post {
-
         success {
             echo 'Deployment Successful 🚀'
         }
