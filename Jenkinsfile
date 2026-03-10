@@ -43,7 +43,7 @@ pipeline {
         stage('Login to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: "$DOCKER_CREDS", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                    sh 'echo $PASSWORD | docker login -u "$USERNAME" --password-stdin'
                 }
             }
         }
@@ -54,6 +54,16 @@ pipeline {
                 docker tag $IMAGE_NAME:$DOCKER_TAG $IMAGE_NAME:latest
                 docker push $IMAGE_NAME:$DOCKER_TAG
                 docker push $IMAGE_NAME:latest
+                '''
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                sh '''
+                docker compose down
+                docker compose pull
+                docker compose up -d
                 '''
             }
         }

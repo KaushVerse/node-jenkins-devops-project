@@ -1,24 +1,44 @@
-# 🚀 Complete Jenkins + Docker + GitHub CI/CD Guide (A → Z)
+# 🚀 Full DevOps CI/CD Project Guide
 
-This document explains **step‑by‑step how to build a full DevOps CI/CD pipeline** using:
+Complete **Node.js + Jenkins + Docker + DockerHub CI/CD Pipeline** documentation.
 
-* 🐙 GitHub – Source code hosting
-* 🤖 Jenkins – CI/CD automation server
-* 🐳 Docker – Containerization
-* 📦 Docker Hub – Container registry
-* 🟢 Node.js – Example application
-
-This guide covers **everything from setup to deployment.**
+This README explains the **entire setup from A → Z** so anyone can reproduce the pipeline.
 
 ---
 
-# 🧠 Final Architecture
+# 📌 Project Overview
+
+This project demonstrates a **CI/CD pipeline** that automatically:
+
+1. Pulls code from GitHub
+2. Installs dependencies
+3. Runs tests
+4. Builds a Docker image
+5. Pushes the image to DockerHub
+6. (Optional) Deploys the container
+
+---
+
+# 🧱 Tech Stack
+
+| Tool         | Purpose                 |
+| ------------ | ----------------------- |
+| 🐙 GitHub    | Source Code Repository  |
+| 🤖 Jenkins   | CI/CD Automation Server |
+| 🐳 Docker    | Containerization        |
+| 📦 DockerHub | Container Registry      |
+| 🟢 Node.js   | Backend Application     |
+| 🧪 Jest      | Testing Framework       |
+
+---
+
+# 🏗 CI/CD Architecture
 
 ```
 Developer
    │
    ▼
-Git Push → GitHub Repository
+GitHub Push
    │
    ▼
 GitHub Webhook
@@ -26,11 +46,10 @@ GitHub Webhook
    ▼
 Jenkins Pipeline
    │
-   ├── Checkout Code
    ├── Install Dependencies
    ├── Run Tests
    ├── Build Docker Image
-   ├── Push Image → Docker Hub
+   ├── Push Image → DockerHub
    └── Deploy Container
 ```
 
@@ -39,7 +58,7 @@ Jenkins Pipeline
 # 📂 Project Structure
 
 ```
-jenkins-devops-project
+node-jenkins-devops-project
 │
 ├── Dockerfile
 ├── docker-compose.yml
@@ -47,27 +66,33 @@ jenkins-devops-project
 ├── package.json
 ├── server.js
 └── tests
+    └── user.test.js
 ```
 
 ---
 
-# 1️⃣ Install Docker
+# ⚙️ 1. Install Requirements
 
-Verify Docker installation:
+Ensure these tools are installed.
+
+```
+Docker
+Docker Compose
+Git
+Node.js
+```
+
+Verify installation:
 
 ```
 docker --version
-```
-
-Verify Docker Compose:
-
-```
-docker compose version
+node -v
+npm -v
 ```
 
 ---
 
-# 2️⃣ Jenkins Setup Using Docker
+# 🐳 2. Jenkins Setup using Docker
 
 Create file:
 
@@ -79,6 +104,7 @@ jenkins.yaml
 version: "3"
 
 services:
+
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
@@ -102,15 +128,15 @@ Run Jenkins:
 docker compose -f jenkins.yaml up -d
 ```
 
-Check container:
-
-```
-docker ps
-```
-
 ---
 
-# 3️⃣ Access Jenkins Dashboard
+# 🔓 3. Unlock Jenkins
+
+Get initial password:
+
+```
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```
 
 Open browser:
 
@@ -118,73 +144,24 @@ Open browser:
 http://localhost:8080
 ```
 
----
-
-# 4️⃣ Jenkins Initial Password
-
-Run command:
-
-```
-docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-```
-
-Copy password and paste into Jenkins unlock page.
-
-Then click:
-
-```
-Install Suggested Plugins
-```
-
-Create Admin User.
+Paste password and install **Suggested Plugins**.
 
 ---
 
-# 5️⃣ Install Required Plugins
+# 🔌 4. Required Jenkins Plugins
 
-Go to:
+Install the following:
 
-```
-Manage Jenkins → Plugins
-```
-
-Install:
-
-* Git plugin
+* Git Plugin
 * GitHub Integration
 * Pipeline
 * Docker Pipeline
 
-Restart Jenkins.
-
 ---
 
-# 6️⃣ Install Docker Inside Jenkins Container
+# 🟢 5. Node.js Application
 
-Enter Jenkins container:
-
-```
-docker exec -it jenkins bash
-```
-
-Install docker:
-
-```
-apt update
-apt install docker.io -y
-```
-
-Verify:
-
-```
-docker --version
-```
-
----
-
-# 7️⃣ Create Node.js Application
-
-Create **server.js**
+Example server:
 
 ```javascript
 const express = require("express")
@@ -192,38 +169,79 @@ const express = require("express")
 const app = express()
 
 app.get("/", (req,res)=>{
-  res.send("DevOps CI/CD Pipeline Running 🚀")
+  res.send("DevOps CI/CD Running 🚀")
 })
 
-app.listen(3000,()=>{
-  console.log("Server running on port 3000")
-})
-```
+module.exports = app
 
----
-
-# 8️⃣ package.json Example
-
-```json
-{
-  "name": "jenkins-devops-project",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "test": "echo tests passed"
-  },
-  "dependencies": {
-    "express": "^5.2.1"
-  }
+if (require.main === module) {
+  app.listen(3000, ()=>{
+    console.log("Server running on port 3000")
+  })
 }
 ```
 
 ---
 
-# 9️⃣ Dockerfile
+# 📦 6. package.json
+
+```json
+{
+ "name": "jenkins-devops-project",
+ "version": "1.0.0",
+ "main": "server.js",
+ "scripts": {
+  "start": "node server.js",
+  "test": "jest"
+ },
+ "dependencies": {
+  "express": "^5.2.1"
+ },
+ "devDependencies": {
+  "jest": "^29.7.0",
+  "supertest": "^7.0.0"
+ }
+}
+```
+
+---
+
+# 🧪 7. Testing (Jest)
+
+Create file:
 
 ```
+tests/user.test.js
+```
+
+```javascript
+const request = require("supertest")
+const app = require("../server")
+
+describe("GET /", () => {
+
+ it("should return welcome message", async () => {
+
+  const res = await request(app).get("/")
+
+  expect(res.statusCode).toBe(200)
+
+ })
+
+})
+```
+
+Run tests:
+
+```
+npm test
+```
+
+---
+
+# 🐳 8. Dockerfile
+
+```dockerfile
 FROM node:20-alpine
 
 WORKDIR /app
@@ -241,9 +259,7 @@ CMD ["node","server.js"]
 
 ---
 
-# 🔟 Docker Compose (Deployment)
-
-Create:
+# 📦 9. Docker Compose (Deployment)
 
 ```
 docker-compose.yml
@@ -254,19 +270,40 @@ version: "3"
 
 services:
 
-  app:
-    image: your-dockerhub-username/node-devops-app:latest
-    container_name: node-app
+ app:
+  image: kaushik8136/node-devops-app:latest
 
-    ports:
-      - "3000:3000"
+  ports:
+   - "3000:3000"
 
-    restart: always
+  restart: always
 ```
 
 ---
 
-# 1️⃣1️⃣ DockerHub Credentials in Jenkins
+# 🔑 10. DockerHub Access Token
+
+Go to:
+
+```
+DockerHub → Account Settings → Security
+```
+
+Create:
+
+```
+New Access Token
+```
+
+Permissions:
+
+```
+Read & Write
+```
+
+---
+
+# 🔐 11. Jenkins Credentials
 
 Go to:
 
@@ -280,138 +317,30 @@ Manage Jenkins
 Select:
 
 ```
-Kind: Username with password
+Username with password
 ```
 
-Fill:
+Example:
 
 ```
-Username: dockerhub username
-Password: dockerhub access token
+Username: kaushik8136
+Password: DockerHub Access Token
 ID: dockerhub-creds
 ```
 
 ---
 
-# 1️⃣2️⃣ Create Jenkins Pipeline
-
-Dashboard →
-
-```
-New Item
-```
-
-Name:
-
-```
-node-devops-pipeline
-```
-
-Select:
-
-```
-Pipeline
-```
-
 ---
 
-# 1️⃣3️⃣ Connect GitHub Repository
+# 🔗 13. GitHub Webhook
 
-Pipeline configuration:
-
-```
-Pipeline script from SCM
-```
-
-SCM:
+Go to:
 
 ```
-Git
-```
-
-Repository URL:
-
-```
-https://github.com/your-username/jenkins-devops-project.git
-```
-
-Branch:
-
-```
-*/main
-```
-
-Script Path:
-
-```
-Jenkinsfile
-```
-
----
-
-# 1️⃣4️⃣ Jenkinsfile (Pipeline)
-
-```groovy
-pipeline {
-
- agent any
-
- environment {
-  IMAGE_NAME = "dockerhub-username/node-devops-app"
-  DOCKER_TAG = "${BUILD_NUMBER}"
- }
-
- stages {
-
-  stage('Checkout Code') {
-   steps {
-    git branch: 'main', url: 'https://github.com/your-username/jenkins-devops-project.git'
-   }
-  }
-
-  stage('Install Dependencies') {
-   steps {
-    sh 'npm ci'
-   }
-  }
-
-  stage('Run Tests') {
-   steps {
-    sh 'npm test'
-   }
-  }
-
-  stage('Build Docker Image') {
-   steps {
-    sh 'docker build -t $IMAGE_NAME:$DOCKER_TAG .'
-   }
-  }
-
-  stage('Push Docker Image') {
-   steps {
-    sh 'docker push $IMAGE_NAME:$DOCKER_TAG'
-   }
-  }
-
-  stage('Deploy Container') {
-   steps {
-    sh 'docker compose pull'
-    sh 'docker compose up -d'
-   }
-  }
-
- }
-}
-```
-
----
-
-# 1️⃣5️⃣ GitHub Webhook Setup
-
-Go to repository:
-
-```
-Settings → Webhooks → Add Webhook
+GitHub Repository
+→ Settings
+→ Webhooks
+→ Add Webhook
 ```
 
 Payload URL:
@@ -432,51 +361,47 @@ Event:
 Just the push event
 ```
 
-Now every **git push triggers Jenkins pipeline automatically.**
-
 ---
 
-# 🔄 CI/CD Workflow
+# 🔄 CI/CD Pipeline Flow
 
 ```
-Developer Push Code
-        │
-        ▼
-      GitHub
-        │
-        ▼
-   GitHub Webhook
-        │
-        ▼
-      Jenkins
-        │
-        ├── Checkout Code
-        ├── Install Dependencies
-        ├── Run Tests
-        ├── Build Docker Image
-        ├── Push Image
-        └── Deploy Container
+Developer Push
+     │
+     ▼
+GitHub Repository
+     │
+     ▼
+GitHub Webhook
+     │
+     ▼
+Jenkins Pipeline
+     │
+     ├── npm install
+     ├── run tests
+     ├── build docker image
+     ├── push docker image
+     └── deploy container
 ```
 
 ---
 
-# 📊 Real DevOps Production Architecture
+# 📊 DevOps Production Architecture
 
 ```
 GitHub
    │
    ▼
-CI Tool (Jenkins / GitHub Actions)
+CI (Jenkins)
    │
    ▼
 Docker Build
    │
    ▼
-Container Registry
-(DockerHub / AWS ECR)
+DockerHub Registry
    │
    ▼
-Kubernetes Cluster
+Server Deployment
    │
    ▼
 Monitoring
@@ -487,43 +412,44 @@ Monitoring
 
 # 🧠 DevOps Concepts Explained
 
-### Continuous Integration (CI)
+### Continuous Integration
 
-Every code push automatically builds and tests the application.
+Automated build and test after each code push.
 
-### Continuous Delivery (CD)
+### Continuous Delivery
 
-Application automatically deploys after successful build.
+Application automatically prepared for deployment.
 
 ### Containerization
 
-Docker packages application with all dependencies.
+Docker packages application with dependencies.
 
 ### Infrastructure Automation
 
-Jenkins automates build, test and deployment pipelines.
+Jenkins automates build, test, and deployment.
 
 ---
 
 # 🎯 Final Result
 
-After completing setup:
+After setup:
 
 ✔ Push code to GitHub
-✔ Jenkins pipeline runs automatically
-✔ Docker image builds
-✔ Image pushed to DockerHub
-✔ Application redeployed automatically
 
-This creates a **fully automated CI/CD pipeline.**
+✔ Jenkins pipeline runs automatically
+
+✔ Docker image builds
+
+✔ Image pushed to DockerHub
+
+✔ Container ready for deployment
 
 ---
 
 # 🚀 Skills Demonstrated
 
-* Jenkins
 * Docker
-* DockerHub
+* Jenkins
 * GitHub Webhooks
 * CI/CD Pipeline
 * Node.js Deployment
@@ -533,14 +459,18 @@ This creates a **fully automated CI/CD pipeline.**
 
 # 🏁 Perfect DevOps Portfolio Project
 
-This project demonstrates **real DevOps engineering workflow used in companies.**
+This repository demonstrates **real DevOps workflow used in production environments.**
 
-It is ideal for:
+It is suitable for:
 
-* DevOps portfolio
-* GitHub README documentation
-* Interview demonstrations
+* DevOps portfolios
+* Interviews
+* Learning CI/CD
 
 ---
 
-🔥 End of Complete Jenkins CI/CD Guide
+# ⭐ Author
+
+Created by **Kaushik Mondal**
+
+DevOps + Software Engineering Project
