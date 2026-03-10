@@ -3,12 +3,9 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "node-devops-app"
+        IMAGE_NAME = "your-dockerhub-username/node-devops-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
-    }
-
-    options {
-        skipStagesAfterUnstable()
+        DOCKER_CREDS = "dockerhub-creds"
     }
 
     stages {
@@ -21,7 +18,7 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-username/node-jenkins-devops-project.git'
+                git branch: 'main', url: 'https://github.com/your-username/jenkins-devops-project.git'
             }
         }
 
@@ -43,16 +40,27 @@ pipeline {
             }
         }
 
-        stage('Tag Latest Image') {
+        stage('Login to DockerHub') {
             steps {
+                withCredentials([usernamePassword(credentialsId: "$DOCKER_CREDS", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                sh 'docker push $IMAGE_NAME:$DOCKER_TAG'
                 sh 'docker tag $IMAGE_NAME:$DOCKER_TAG $IMAGE_NAME:latest'
+                sh 'docker push $IMAGE_NAME:latest'
             }
         }
 
         stage('Deploy Container') {
             steps {
                 sh 'docker compose down'
-                sh 'docker compose up -d --build'
+                sh 'docker compose pull'
+                sh 'docker compose up -d'
             }
         }
     }
