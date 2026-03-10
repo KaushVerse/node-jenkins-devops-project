@@ -40,25 +40,29 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$DOCKER_TAG .'
+                sh '/usr/bin/docker build -t $IMAGE_NAME:$DOCKER_TAG .'
             }
         }
 
         stage('Login to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: "$DOCKER_CREDS", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                   sh '''
+                    echo $PASSWORD | /usr/bin/docker login -u $USERNAME --password-stdin
+                      '''
                 }
             }
         }
 
-        stage('Push Image') {
-            steps {
-                sh 'docker push $IMAGE_NAME:$DOCKER_TAG'
-                sh 'docker tag $IMAGE_NAME:$DOCKER_TAG $IMAGE_NAME:latest'
-                sh 'docker push $IMAGE_NAME:latest'
-            }
-        }
+      stage('Push Image') {
+          steps {
+        sh '''
+        /usr/bin/docker tag $IMAGE_NAME:$DOCKER_TAG $IMAGE_NAME:latest
+        /usr/bin/docker push $IMAGE_NAME:$DOCKER_TAG
+        /usr/bin/docker push $IMAGE_NAME:latest
+        '''
+     }
+    }
 
         stage('Deploy Container') {
             steps {
