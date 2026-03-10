@@ -3,7 +3,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "kaushverse/node-devops-app"
+        IMAGE_NAME = "kaushverse8136/node-devops-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_CREDS = "dockerhub-creds"
     }
