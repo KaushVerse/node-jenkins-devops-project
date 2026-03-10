@@ -3,7 +3,7 @@ version: "3"
 services:
   app:
     app:
-    image: your-dockerhub-username/node-devops-app:latest
+    image: kaushik8136/node-devops-app:latest
     container_name: node-app
     ports:
       - "3000:3000"
