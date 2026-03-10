@@ -1,6 +1,10 @@
 pipeline {
 
-    agent any
+   agent {
+        docker {
+            image 'node:20'
+        }
+    }
 
     environment {
         IMAGE_NAME = "kaushverse/node-devops-app"
