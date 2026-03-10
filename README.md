@@ -101,7 +101,7 @@ jenkins.yaml
 ```
 
 ```yaml
-version: "3"
+version: "3.9"
 
 services:
 
@@ -164,20 +164,25 @@ Install the following:
 Example server:
 
 ```javascript
-const express = require("express")
+const express = require("express");
+const app = express();
+const userRoutes = require("./app/routes/userRoutes");
 
-const app = express()
+app.use(express.json());
 
-app.get("/", (req,res)=>{
-  res.send("DevOps CI/CD Running 🚀")
-})
+app.use("/users", userRoutes);
 
-module.exports = app
+app.get("/", (req, res) => {
+  res.send("DevOps CI/CD Running 🚀");
+});
 
+module.exports = app;
+
+// start server only when running directly
 if (require.main === module) {
-  app.listen(3000, ()=>{
-    console.log("Server running on port 3000")
-  })
+  app.listen(3000, () => {
+    console.log("Server running on port 3000");
+  });
 }
 ```
 
@@ -188,19 +193,11 @@ if (require.main === module) {
 ```json
 {
  "name": "jenkins-devops-project",
- "version": "1.0.0",
  "main": "server.js",
  "scripts": {
-  "start": "node server.js",
-  "test": "jest"
+  "test": "jest --runInBand --detectOpenHandles",
+    "start": "node server.js"
  },
- "dependencies": {
-  "express": "^5.2.1"
- },
- "devDependencies": {
-  "jest": "^29.7.0",
-  "supertest": "^7.0.0"
- }
 }
 ```
 
@@ -215,20 +212,15 @@ tests/user.test.js
 ```
 
 ```javascript
-const request = require("supertest")
-const app = require("../server")
+const request = require("supertest");
+const app = require("../server");
 
 describe("GET /", () => {
-
- it("should return welcome message", async () => {
-
-  const res = await request(app).get("/")
-
-  expect(res.statusCode).toBe(200)
-
- })
-
-})
+  it("should return welcome message", async () => {
+    const res = await request(app).get("/");
+    expect(res.statusCode).toBe(200);
+  });
+});
 ```
 
 Run tests:
@@ -242,19 +234,26 @@ npm test
 # 🐳 8. Dockerfile
 
 ```dockerfile
+# Base Image
 FROM node:20-alpine
 
+# Working Directory
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
 
-RUN npm ci --omit=dev
+# Install dependencies
+RUN npm ci --only=production
 
+# Copy app source
 COPY . .
 
+# Expose port
 EXPOSE 3000
 
-CMD ["node","server.js"]
+# Start app
+CMD ["npm", "start"]
 ```
 
 ---
@@ -266,17 +265,17 @@ docker-compose.yml
 ```
 
 ```yaml
-version: "3"
+version: "3.9"
 
 services:
+  app:
+    image: kaushik8136/node-devops-app:latest
+    container_name: node-devops-app
 
- app:
-  image: kaushik8136/node-devops-app:latest
+    ports:
+      - "3000:3000"
 
-  ports:
-   - "3000:3000"
-
-  restart: always
+    restart: always
 ```
 
 ---
