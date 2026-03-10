@@ -61,9 +61,9 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 sh '''
-                docker compose down
-                docker compose pull
-                docker compose up -d
+                docker-compose down
+                docker-compose pull
+                docker-compose up -d
                 '''
             }
         }
